@@ -254,7 +254,6 @@ void MulticopterPositionControl::Run()
 		return;
 	}
 
-	bool test = true;
 
 	// reschedule backup
 	ScheduleDelayed(100_ms);

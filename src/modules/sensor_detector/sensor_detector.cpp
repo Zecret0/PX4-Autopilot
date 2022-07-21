@@ -137,12 +137,39 @@ SensorDetector::SensorDetector(int example_param, bool example_flag)
 
 void SensorDetector::run()
 {
-	// initialize parameters
-	parameters_update(true);
-
 	if(should_exit()){
 		exit_and_cleanup();
 		return;
+	}
+
+	ScheduleDelayed(100ms);
+
+	// initialize parameters
+	parameters_update(false);
+
+	distance_sensor_s distance_sensor;
+	float sum = 0.0f;
+
+	for (unsigned i = 0; i < _distance_sensor_subs.size(); i++) {
+		if (_distance_sensor_subs[i].copy(&distance_sensor)) {
+			_sensor_data[i][_time] = distance_sensor.current_distance;
+		}
+	}
+
+	_time ++;
+
+	if(_time == 5){
+
+		for (unsigned i = 0; i < _distance_sensor_subs.size(); i++) {
+			for(unsigned j = 0; j < 5; j++){
+				sum += _sensor_data[i][j];
+			}
+			if(fabsf(sum/5.0f - _sensor_data[i][0]) < 0.01f){
+				_insafe = false;
+				PX4_INFO("distance sensor failed (%d)", i);
+			}
+		}
+		_time = 0;
 	}
 
 }

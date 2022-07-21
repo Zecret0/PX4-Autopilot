@@ -36,6 +36,10 @@
 #include <px4_platform_common/module.h>
 #include <px4_platform_common/module_params.h>
 #include <uORB/Subscription.hpp>
+#include <lib/hysteresis/hysteresis.h>
+#include <lib/perf/perf_counter.h>
+#include <px4_platform_common/px4_work_queue/ScheduledWorkItem.hpp>
+#include <lib/systemlib/mavlink_log.h>
 #include <uORB/topics/parameter_update.h>
 #include <uORB/SubscriptionMultiArray.hpp>
 #include <uORB/topics/distance_sensor.h>
@@ -85,6 +89,12 @@ private:
 
 	// Subscriptions
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
+	uORB::Subscription _distance_sensor_sub{ORB_ID(distance_sensor)};
+	uORB::SubscriptionMultiArray<distance_sensor_s> _distance_sensor_subs{ORB_ID::distance_sensor};
+
+	int _time{0};	//记录传感器数值的次数
+	float _sensor_data[8][5]{0};	//记录传感器数值数组
+	bool _insafe{true};
 
 };
 

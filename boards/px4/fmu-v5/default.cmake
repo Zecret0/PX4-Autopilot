@@ -85,6 +85,7 @@ px4_add_board(
 		rc_update
 		rover_pos_control
 		sensors
+		sensor_detector
 		sih
 		temperature_compensation
 		uuv_att_control

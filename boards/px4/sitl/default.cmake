@@ -53,6 +53,8 @@ px4_add_board(
 		replay
 		rover_pos_control
 		sensors
+		sensor_detector
+		safe_detector
 		#sih
 		simulator
 		temperature_compensation

@@ -41,6 +41,7 @@
 
 #include <drivers/drv_hrt.h>
 #include <lib/perf/perf_counter.h>
+#include <stdlib.h>
 
 #include <uORB/Publication.hpp>
 #include <uORB/Subscription.hpp>

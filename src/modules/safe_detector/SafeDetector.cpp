@@ -48,13 +48,13 @@ SafeDetector::~SafeDetector()
 bool SafeDetector::init()
 {
 	// execute Run() on every sensor_accel publication
-	if (!_sensor_accel_sub.registerCallback()) {
-		PX4_ERR("sensor_accel callback registration failed");
-		return false;
-	}
+	// if (!_sensor_accel_sub.registerCallback()) {
+		// PX4_ERR("sensor_accel callback registration failed");
+		// return false;
+	// }
 
 	// alternatively, Run on fixed interval
-	// ScheduleOnInterval(5000_us); // 2000 us interval, 200 Hz rate
+	ScheduleOnInterval(1000000_us); // 2000 us interval, 200 Hz rate
 
 	return true;
 }
@@ -67,6 +67,8 @@ void SafeDetector::Run()
 		return;
 	}
 
+	// reschedule backup
+
 	perf_begin(_loop_perf);
 	perf_count(_loop_interval_perf);
 
@@ -78,6 +80,17 @@ void SafeDetector::Run()
 		updateParams(); // update module parameters (in DEFINE_PARAMETERS)
 	}
 
+	if (_vehicle_status_sub.updated()) {
+		vehicle_status_s vehicle_status;
+
+		if (_vehicle_status_sub.copy(&vehicle_status)) {
+
+			const bool armed = (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED);
+
+			_armed = armed;
+		}
+	}
+
 	distance_sensor_s distance_sensor;
 
 	//取值
@@ -87,9 +100,12 @@ void SafeDetector::Run()
 		}
 	}
 
-	//报警
-	if(_down < 1.f){
-		PX4_INFO("距离过低");
+	double data = rand()/(double)RAND_MAX;
+
+	//输出显示
+	// if(_down < 1.f )
+	if(_armed){
+		PX4_INFO("%f",data);
 	}
 
 

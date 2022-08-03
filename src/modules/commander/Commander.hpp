@@ -87,6 +87,7 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vtol_vehicle_status.h>
+#include <uORB/topics/rc_channels.h>
 
 using math::constrain;
 using systemlib::Hysteresis;
@@ -377,6 +378,10 @@ private:
 	bool		_should_set_home_on_takeoff{true};
 	bool		_system_power_usb_connected{false};
 
+	//ziy
+	hrt_abstime	_time_cla_msg_start{0};
+	int _cla_count{0};
+
 	cpuload_s		_cpuload{};
 	geofence_result_s	_geofence_result{};
 	vehicle_land_detected_s	_land_detector{};
@@ -407,6 +412,9 @@ private:
 	uORB::Subscription					_vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
 	uORB::Subscription					_vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 	uORB::Subscription					_vtol_vehicle_status_sub{ORB_ID(vtol_vehicle_status)};
+	//ziy
+	uORB::Subscription					_rc_channels_sub{ORB_ID(rc_channels)};
+	rc_channels_s	_rc_channels;
 
 	uORB::SubscriptionInterval				_parameter_update_sub{ORB_ID(parameter_update), 1_s};
 

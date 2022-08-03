@@ -1620,6 +1620,55 @@ Commander::run()
 
 #endif // BOARD_HAS_POWER_CONTROL
 
+	//////////////////////////////////////////////////////////////////////////////////////
+	//ziy测试遥控器拨钮控制航向角校准
+	if(_rc_channels_sub.updated()){
+		_rc_channels_sub.copy(&_rc_channels);
+
+		switch(_cla_count){
+			case 0:
+				if(_rc_channels.channels[8] > 0){
+				_cla_count++;
+				_time_cla_msg_start = hrt_absolute_time()/1e6;
+				PX4_INFO("cla_count : %d \r \n", _cla_count);
+				}
+				break;
+			case 1:
+				if(_rc_channels.channels[8] < 0)
+					_cla_count++;
+				PX4_INFO("cla_count : %d \r \n", _cla_count);
+				break;
+			case 2:
+				if(_rc_channels.channels[8] > 0)
+					_cla_count++;
+				PX4_INFO("cla_count : %d \r \n", _cla_count);
+				break;
+			case 3:
+				if(_rc_channels.channels[8] < 0)
+					_cla_count++;
+				PX4_INFO("cla_count : %d \r \n", _cla_count);
+				break;
+			case 4:
+				if(_rc_channels.channels[8] > 0)
+					_cla_count++;
+				PX4_INFO("cla_count : %d \r \n", _cla_count);
+				break;
+			case 5:
+				if(_rc_channels.channels[8] < 0){
+					send_vehicle_command(vehicle_command_s::VEHICLE_CMD_PREFLIGHT_CALIBRATION, 0.f, 1.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+					_cla_count = 0;
+					PX4_INFO("cla_count : %d \r \n", _cla_count);
+				}
+				break;
+			default:
+				break;
+		}
+
+		if((hrt_absolute_time()/1e6 - _time_cla_msg_start) > 3 )
+			_cla_count = 0;
+	}
+	//////////////////////////////////////////////////////////////////////////////////////
+
 	get_circuit_breaker_params();
 
 	bool param_init_forced = true;

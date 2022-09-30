@@ -205,6 +205,9 @@ set(msg_files
 	wheel_encoders.msg
 	wind.msg
 	yaw_estimator_status.msg
+
+	# 自建msg
+	smc_control.msg
 )
 
 if(NOT px4_constrained_flash_build)

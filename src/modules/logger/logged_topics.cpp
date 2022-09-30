@@ -184,6 +184,9 @@ void LoggedTopics::add_default_topics()
 	add_topic_multi("vehicle_imu_status", 1000, 4);
 	add_optional_topic_multi("vehicle_magnetometer", 500, 4);
 
+	//自建msg
+	add_topic("smc_control", 100);
+
 	// SYS_CTRL_ALLOC: additional dynamic control allocation logging when enabled
 	int32_t sys_ctrl_alloc = 0;
 	param_get(param_find("SYS_CTRL_ALLOC"), &sys_ctrl_alloc);

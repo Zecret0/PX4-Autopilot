@@ -255,6 +255,11 @@ MulticopterRateControl::Run()
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;
+			smc_control_s smc;
+			_smc_att_control_sub.update(&smc);
+			actuators.control[actuator_controls_s::INDEX_ROLL] = smc.u1;
+			actuators.control[actuator_controls_s::INDEX_PITCH] = smc.u2;
+			actuators.control[actuator_controls_s::INDEX_YAW] = smc.u3;
 
 			if (!_vehicle_status.is_vtol) {
 				publishTorqueSetpoint(att_control, angular_velocity.timestamp_sample);

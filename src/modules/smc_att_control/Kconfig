@@ -1,0 +1,5 @@
+menuconfig MODULES_SMC_ATT_CONTROL
+	bool "smc_att_control"
+	default n
+	---help---
+		Enable support for smc_att_control

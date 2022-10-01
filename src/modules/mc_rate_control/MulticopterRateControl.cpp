@@ -415,3 +415,5 @@ extern "C" __EXPORT int mc_rate_control_main(int argc, char *argv[])
 {
 	return MulticopterRateControl::main(argc, argv);
 }
+
+float

@@ -260,6 +260,9 @@ MulticopterRateControl::Run()
 			actuators.control[actuator_controls_s::INDEX_ROLL] = smc.u1;
 			actuators.control[actuator_controls_s::INDEX_PITCH] = smc.u2;
 			actuators.control[actuator_controls_s::INDEX_YAW] = smc.u3;
+			math::constrain(actuators.control[actuator_controls_s::INDEX_ROLL], -1.0f, 1.0f);
+			math::constrain(actuators.control[actuator_controls_s::INDEX_PITCH], -1.0f, 1.0f);
+			math::constrain(actuators.control[actuator_controls_s::INDEX_YAW], -1.0f, 1.0f);
 
 			if (!_vehicle_status.is_vtol) {
 				publishTorqueSetpoint(att_control, angular_velocity.timestamp_sample);

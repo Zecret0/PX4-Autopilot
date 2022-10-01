@@ -107,8 +107,8 @@ void SMCAttControl::Run()
 
 	quat_to_roll(q);
 	//获取输入量
-	// _control.att[0] = euler_att.phi();	//角度
-	_control.att[0] = quat_to_roll(q);
+	_control.att[0] = euler_att.phi();	//角度
+	// _control.att[0] = quat_to_roll(q);
 	_control.att[1] = euler_att.theta();
 	_control.att[2] = euler_att.psi();
 	// _control.attd[0] = vsp_att.roll_body;	//期望角度
@@ -141,7 +141,7 @@ void SMCAttControl::Run()
 	_control.z[3] = z4;	_control.z[4] = z5;	_control.z[5] = z6;
 	//控制量计算
 	_control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
-	_control.u2 = 1.4f/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	_control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
 	_control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
 
 	//发布给执行机构

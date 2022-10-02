@@ -67,6 +67,7 @@
 #include <uORB/topics/actuator_controls_status.h>
 #include <uORB/topics/vehicle_rates_setpoint.h>
 #include <uORB/topics/landing_gear.h>
+#include <uORB/topics/vehicle_local_position.h>
 
 using namespace time_literals;
 
@@ -104,6 +105,8 @@ private:
 	uORB::Subscription                 _vehicle_status_sub{ORB_ID(vehicle_status)};          // regular subscription for additional data
 
 	uORB::Subscription	_smc_control_sub{ORB_ID(smc_control)};
+	//获取当前角位置信息
+	uORB::Subscription	_local_pos_sub{ORB_ID(vehicle_local_position)};
 	//获取当前角度（按四元数记录，需要转换
 	uORB::Subscription	_vehicle_attitude_sub{ORB_ID(vehicle_attitude)};	//暂时以固定频率运行作为测试，因此不用SubscriptionCallbackWorkItem
 	//获取当前角速度 (参照mc_att_control)
@@ -148,6 +151,7 @@ private:
 
 	bool _armed{false};
 
-	smc_control_s _control{};
+	// smc_control_s _control{};	//不能定义全局变量，会有问题
+	vehicle_attitude_setpoint_s vsp_att;	//得定义全局变量
 
 };

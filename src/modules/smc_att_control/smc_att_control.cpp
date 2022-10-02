@@ -77,6 +77,7 @@ void SMCAttControl::Run()
 	perf_begin(_loop_perf);
 	perf_count(_loop_interval_perf);
 
+	smc_control_s _control{};	//不能定义全局变量，从记录日志上看会有问题
 	const hrt_abstime now = hrt_absolute_time();
 	_control.timestamp = hrt_absolute_time();
 	const float dt = math::constrain(((now - _last_run) * 1e-6f), 0.000125f, 0.02f);
@@ -100,10 +101,16 @@ void SMCAttControl::Run()
 	_vehicle_attitude_sub.update(&v_att);
 	const Quatf q{v_att.q};
 	const Eulerf euler_att{Dcmf(q)};
-	vehicle_attitude_setpoint_s vsp_att;
+	// vehicle_attitude_setpoint_s vsp_att;
 	_vehicle_attitude_setpoint_sub.update(&vsp_att);
 	vehicle_angular_velocity_s v_rates;
 	_vehicle_angular_velocity_sub.update(&v_rates);
+	vehicle_local_position_s v_pos;
+	_local_pos_sub.update(&v_pos);
+	// if(v_pos.z < -10.0f){
+	// 	// _control.attd[1] = 10.0f/57.3f;
+	// 	vsp_att.pitch_body = 10.0f/57.3f;
+	// }
 
 	quat_to_roll(q);
 	//获取输入量
@@ -140,9 +147,12 @@ void SMCAttControl::Run()
 	_control.z[0] = z1;	_control.z[1] = z2;	_control.z[2] = z3;
 	_control.z[3] = z4;	_control.z[4] = z5;	_control.z[5] = z6;
 	//控制量计算
-	_control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
-	_control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
-	_control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	// _control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
+	// _control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	// _control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	_control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
+	_control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	_control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
 
 	//发布给执行机构
 	// use rates setpoint topic

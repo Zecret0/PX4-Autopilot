@@ -66,6 +66,8 @@
 
 //SMCtest
 #include <uORB/topics/smc_control.h>
+#include <uORB/topics/vehicle_attitude.h>
+#include <uORB/topics/vehicle_attitude_setpoint.h>
 
 using namespace time_literals;
 
@@ -112,6 +114,10 @@ private:
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	//SMCtest
 	uORB::Subscription _smc_att_control_sub{ORB_ID(smc_control)};
+	//获取当前角度
+	uORB::Subscription	_vehilce_attitude_sub{ORB_ID(vehicle_attitude)};
+	//获取期望角度
+	uORB::Subscription	_vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
 
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 

@@ -83,4 +83,4 @@ mc_pos_control start
 #
 land_detector start multicopter
 
-smc_att_control start
+# smc_att_control start

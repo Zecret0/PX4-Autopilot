@@ -109,3 +109,58 @@ void RateControl::getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status)
 	rate_ctrl_status.pitchspeed_integ = _rate_int(1);
 	rate_ctrl_status.yawspeed_integ = _rate_int(2);
 }
+
+//增加smc的控制器
+Vector3f RateControl::smcControl(const Vector3f &att, const Vector3f &att_sp, const Vector3f &rate, Vector3f &rate_sp,
+			    hrt_abstime now)
+{
+	//smc_control 信息主要用作日志的记录量，方便分析
+	smc_control_s control;
+	control.timestamp = now;
+
+	//预先处理？四元数->欧拉角
+
+	//假定期望的角速率为0
+	rate_sp.setZero();
+
+	//记录期望信息
+	control.attd[0] = att_sp(0);	control.attd[1] = att_sp(1);	control.attd[2] = att_sp(2);	//角度
+	control.dattd[0] = rate_sp(0);	control.dattd[1] = rate_sp(1);	control.dattd[2] = rate_sp(2);	//角速度
+	//记录状态信息
+	control.att[0] = att(0);	control.att[1] = att(1);	control.att[2] = att(2);
+	control.datt[0] = rate(0);	control.datt[1] = rate(1);	control.datt[2] = rate(2);
+	//为了看着方便
+	float phi = control.att[0];	float theta = control.att[1];	float psi = control.att[2];
+	float dphi = control.datt[0];	float dtheta = control.datt[1];	float dpsi = control.datt[2];
+	float phid = control.attd[0];	float thetad = control.attd[1];	float psid = control.attd[2];
+	float dphid = control.dattd[0];	float dthetad = control.dattd[1];	float dpsid = control.dattd[2];
+
+	//控制参数计算
+	float a1 = (_iyy - _izz)/_ixx;	float a2 = (_izz - _ixx)/_iyy;	float a3 = (_ixx - _iyy)/_izz;
+	float b1 = _d/_ixx;	float b2 = _d/_iyy;	float b3 = _d/_izz;
+
+	//滑膜面计算
+	float z1 = phid - phi;	float z2 = dphi - dphid - z1;
+	float z3 = thetad - theta; float z4 = dtheta - dthetad - z3;
+	float z5 = psid - psi;	float z6 = dpsi - dpsid - z5;
+	//记录滑膜面信息
+	control.z[0] = z1;	control.z[1] = z2;	control.z[2] = z3;
+	control.z[3] = z4;	control.z[4] = z5;	control.z[5] = z6;
+
+	//控制量计算
+	// _control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
+	// _control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	// _control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
+	control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
+
+	Vector3f torque;
+	torque(0) = control.u1;
+	torque(1) = control.u2;
+	torque(2) = control.u3;
+
+	_smc_control_pub.publish(control);
+
+	return torque;
+}

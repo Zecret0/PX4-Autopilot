@@ -239,7 +239,20 @@ MulticopterRateControl::Run()
 			}
 
 			// run rate controller
-			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
+			// const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
+			//Ziy	替换姿态控制器
+			//先处理角度信息（四元数->欧拉角
+			vehicle_attitude_s v_att;
+			_vehilce_attitude_sub.update(&v_att);	//获取无人机当前姿态信息
+			const Quatf q{v_att.q};
+			const Eulerf euler_att{Dcmf(q)};	//四元数->欧拉角
+			const Vector3f attitude(euler_att.phi(), euler_att.theta(), euler_att.psi());	//最终输入到控制器的当前姿态角
+			vehicle_attitude_setpoint_s vsp_att;
+			_vehicle_attitude_setpoint_sub.update(&vsp_att);	//期望角度直接有欧拉角信息，直接使用不需要再做转换
+			const Vector3f attitude_sp(vsp_att.roll_body, vsp_att.pitch_body, vsp_att.yaw_body);	//还是要构造输入的期望姿态角矩阵
+
+			//姿态滑膜控制器
+			const Vector3f att_control = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};
@@ -255,14 +268,14 @@ MulticopterRateControl::Run()
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;
-			smc_control_s smc;
-			_smc_att_control_sub.update(&smc);
-			actuators.control[actuator_controls_s::INDEX_ROLL] = smc.u1;
-			actuators.control[actuator_controls_s::INDEX_PITCH] = smc.u2;
-			actuators.control[actuator_controls_s::INDEX_YAW] = smc.u3;
-			math::constrain(actuators.control[actuator_controls_s::INDEX_ROLL], -1.0f, 1.0f);
-			math::constrain(actuators.control[actuator_controls_s::INDEX_PITCH], -1.0f, 1.0f);
-			math::constrain(actuators.control[actuator_controls_s::INDEX_YAW], -1.0f, 1.0f);
+			// smc_control_s smc;
+			// _smc_att_control_sub.update(&smc);
+			// actuators.control[actuator_controls_s::INDEX_ROLL] = smc.u1;
+			// actuators.control[actuator_controls_s::INDEX_PITCH] = smc.u2;
+			// actuators.control[actuator_controls_s::INDEX_YAW] = smc.u3;
+			// math::constrain(actuators.control[actuator_controls_s::INDEX_ROLL], -1.0f, 1.0f);
+			// math::constrain(actuators.control[actuator_controls_s::INDEX_PITCH], -1.0f, 1.0f);
+			// math::constrain(actuators.control[actuator_controls_s::INDEX_YAW], -1.0f, 1.0f);
 
 			if (!_vehicle_status.is_vtol) {
 				publishTorqueSetpoint(att_control, angular_velocity.timestamp_sample);
@@ -416,7 +429,8 @@ extern "C" __EXPORT int mc_rate_control_main(int argc, char *argv[])
 	return MulticopterRateControl::main(argc, argv);
 }
 
-// void MulticopterRateControl::asmc_controller(const Vector3f &att_sp, const Vector3f &rate_sp, const Vector3f &att,
+//写到RateControl中，模块化比较清楚
+// void MulticopterRateControl::smc_controller(const Vector3f &att_sp, const Vector3f &rate_sp, const Vector3f &att,
 // 						Vector3f &rate)
 // {
 

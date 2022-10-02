@@ -44,6 +44,12 @@
 #include <lib/mixer/MultirotorMixer/MultirotorMixer.hpp>
 #include <uORB/topics/rate_ctrl_status.h>
 
+#include <drivers/drv_hrt.h>
+#include <uORB/Publication.hpp>
+#include <matrix/matrix/math.hpp>
+
+#include <uORB/topics/smc_control.h>
+
 class RateControl
 {
 public:
@@ -87,6 +93,8 @@ public:
 	 */
 	matrix::Vector3f update(const matrix::Vector3f &rate, const matrix::Vector3f &rate_sp,
 				const matrix::Vector3f &angular_accel, const float dt, const bool landed);
+	matrix::Vector3f smcControl(const matrix::Vector3f &att, const matrix::Vector3f &att_sp,
+				const matrix::Vector3f &rate, matrix::Vector3f &rate_sp, hrt_abstime now);
 
 	/**
 	 * Set the integral term to 0 to prevent windup
@@ -103,6 +111,9 @@ public:
 private:
 	void updateIntegral(matrix::Vector3f &rate_error, const float dt);
 
+	// Subscriptions
+	uORB:: Publication<smc_control_s>	_smc_control_pub{ORB_ID(smc_control)};
+
 	// Gains
 	matrix::Vector3f _gain_p; ///< rate control proportional gain for all axes x, y, z
 	matrix::Vector3f _gain_i; ///< rate control integral gain
@@ -116,4 +127,9 @@ private:
 	// Feedback from control allocation
 	matrix::Vector<bool, 3> _control_allocator_saturation_negative;
 	matrix::Vector<bool, 3> _control_allocator_saturation_positive;
+
+	//模型参数
+	const float _ixx = 0.03,	_iyy = 0.03,	_izz = 0.06;
+	const float _mass = 1.5;
+	const float _d = 0.66;	//电机离质心的距离
 };

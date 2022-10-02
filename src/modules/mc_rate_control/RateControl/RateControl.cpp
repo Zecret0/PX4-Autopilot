@@ -121,7 +121,7 @@ Vector3f RateControl::smcControl(const Vector3f &att, const Vector3f &att_sp, co
 	//预先处理？四元数->欧拉角
 
 	//假定期望的角速率为0
-	rate_sp.setZero();
+	// rate_sp.setZero();
 
 	//记录期望信息
 	control.attd[0] = att_sp(0);	control.attd[1] = att_sp(1);	control.attd[2] = att_sp(2);	//角度
@@ -148,17 +148,20 @@ Vector3f RateControl::smcControl(const Vector3f &att, const Vector3f &att_sp, co
 	control.z[3] = z4;	control.z[4] = z5;	control.z[5] = z6;
 
 	//控制量计算
-	// _control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
-	// _control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
-	// _control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	// control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
+	// control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	// control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
 	control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
 	control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
 	control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
 
 	Vector3f torque;
-	torque(0) = control.u1;
-	torque(1) = control.u2;
-	torque(2) = control.u3;
+	// torque(0) = control.u1;
+	// torque(1) = control.u2;
+	// torque(2) = control.u3;
+	torque(0) = math::constrain(control.u1, -1.0f, 1.0f);
+	torque(1) = math::constrain(control.u2, -1.0f, 1.0f);
+	torque(2) = math::constrain(control.u3, -1.0f, 1.0f);
 
 	_smc_control_pub.publish(control);
 

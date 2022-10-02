@@ -52,13 +52,13 @@ SMCAttControl::~SMCAttControl()
 bool SMCAttControl::init()
 {
 	// execute Run() on every angular_velocity publication
-	if (!_vehicle_angular_velocity_sub.registerCallback()) {
-		PX4_ERR("callback registration failed");
-		return false;
-	}
+	// if (!_vehicle_angular_velocity_sub.registerCallback()) {
+	// 	PX4_ERR("callback registration failed");
+	// 	return false;
+	// }
 
 	// alternatively, Run on fixed interval
-	// ScheduleOnInterval(10000_us); // 2000 us interval, 200 Hz rate
+	ScheduleOnInterval(1000_us); // 2000 us interval, 200 Hz rate
 
 	return true;
 }
@@ -140,9 +140,12 @@ void SMCAttControl::Run()
 	_control.z[0] = z1;	_control.z[1] = z2;	_control.z[2] = z3;
 	_control.z[3] = z4;	_control.z[4] = z5;	_control.z[5] = z6;
 	//控制量计算
-	_control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
-	_control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
-	_control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	// _control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
+	// _control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	// _control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	_control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
+	_control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	_control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
 
 	//发布给执行机构
 	// use rates setpoint topic

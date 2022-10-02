@@ -416,4 +416,8 @@ extern "C" __EXPORT int mc_rate_control_main(int argc, char *argv[])
 	return MulticopterRateControl::main(argc, argv);
 }
 
-float
+// void MulticopterRateControl::asmc_controller(const Vector3f &att_sp, const Vector3f &rate_sp, const Vector3f &att,
+// 						Vector3f &rate)
+// {
+
+// }

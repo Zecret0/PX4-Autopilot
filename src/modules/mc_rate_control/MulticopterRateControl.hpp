@@ -34,6 +34,7 @@
 #pragma once
 
 #include <RateControl.hpp>
+#include <ASMCControl.hpp>
 
 #include <lib/matrix/matrix/math.hpp>
 #include <lib/perf/perf_counter.h>
@@ -102,6 +103,7 @@ private:
 	void publishThrustSetpoint(const hrt_abstime &timestamp_sample);
 
 	RateControl _rate_control; ///< class for rate control calculations
+	ASMCControl _asmc_control;	//< class for asmc controller
 
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
 	uORB::Subscription _landing_gear_sub{ORB_ID(landing_gear)};
@@ -188,8 +190,36 @@ private:
 
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en,
 
+
+		// //asmc控制器参数
+		(ParamFloat<px4::params::ASMC_X_A1>) _param_asmc_x_a1,
+		(ParamFloat<px4::params::ASMC_Y_A1>) _param_asmc_y_a1,
+		(ParamFloat<px4::params::ASMC_Z_A1>) _param_asmc_z_a1,
+		(ParamFloat<px4::params::ASMC_X_R0>) _param_asmc_x_r0,
+		(ParamFloat<px4::params::ASMC_Y_R0>) _param_asmc_y_r0,
+		(ParamFloat<px4::params::ASMC_Z_R0>) _param_asmc_z_r0,
+		(ParamFloat<px4::params::ASMC_X_ALPHA>) _param_asmc_x_alpha,
+		(ParamFloat<px4::params::ASMC_Y_ALPHA>) _param_asmc_y_alpha,
+		(ParamFloat<px4::params::ASMC_Z_ALPHA>) _param_asmc_z_alpha,
+		(ParamFloat<px4::params::ASMC_X_D0>) _param_asmc_x_d0,
+		(ParamFloat<px4::params::ASMC_Y_D0>) _param_asmc_y_d0,
+		(ParamFloat<px4::params::ASMC_Z_D0>) _param_asmc_z_d0,
+		(ParamFloat<px4::params::ASMC_X_E>) _param_asmc_x_e,
+		(ParamFloat<px4::params::ASMC_Y_E>) _param_asmc_y_e,
+		(ParamFloat<px4::params::ASMC_Z_E>) _param_asmc_z_e,
+		(ParamFloat<px4::params::ASMC_X_N>) _param_asmc_x_n,
+		(ParamFloat<px4::params::ASMC_Y_N>) _param_asmc_y_n,
+		(ParamFloat<px4::params::ASMC_Z_N>) _param_asmc_z_n,
+		(ParamFloat<px4::params::ASMC_X_GAMMA>) _param_asmc_x_gamma,
+		(ParamFloat<px4::params::ASMC_Y_GAMMA>) _param_asmc_y_gamma,
+		(ParamFloat<px4::params::ASMC_Z_GAMMA>) _param_asmc_z_gamma,
+		(ParamFloat<px4::params::ASMC_X_TAU>) _param_asmc_x_tau,
+		(ParamFloat<px4::params::ASMC_Y_TAU>) _param_asmc_y_tau,
+		(ParamFloat<px4::params::ASMC_Z_TAU>) _param_asmc_z_tau,
+
 		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl
-	)
+
+	);
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
 

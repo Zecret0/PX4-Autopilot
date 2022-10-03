@@ -132,4 +132,14 @@ private:
 	const float _ixx = 0.03,	_iyy = 0.03,	_izz = 0.06;
 	const float _mass = 1.5;
 	const float _d = 0.66;	//电机离质心的距离
+
+	//asmc控制参数
+	float _asmc_a1;		float _asmc_r0;		float _asmc_alpha;	float _asmc_d0;
+	float _asmc_e;		float _asmc_n;		float _asmc_gamma;	float _asmc_tau;
+	//asmc控制器过程参数
+	float _asmc_rho;
+	//asmc控制器状态量
+	matrix::Vector3f _asmc_ueq;
+	matrix::Vector3f _asmc_k;
+	matrix::Vector3f _asmc_r;
 };

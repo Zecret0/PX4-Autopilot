@@ -151,9 +151,12 @@ Vector3f RateControl::smcControl(const Vector3f &att, const Vector3f &att_sp, co
 	// control.u1 = 1/b1*(-sign(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
 	// control.u2 = 1/b2*(-sign(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
 	// control.u3 = 1/b3*(-sign(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
-	control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
-	control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
-	control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	// control.u1 = 1/b1*(-z2 - z2 - a1*dtheta*dpsi + dphid - dphi);
+	// control.u2 = 1/b2*(-z4 - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	// control.u3 = 1/b3*(-z6 - z6 - a3*dphi*dtheta + dpsid - dpsi);
+	control.u1 = 1/b1*(-tanh(z2) - z2 - a1*dtheta*dpsi + dphid - dphi);
+	control.u2 = 1/b2*(-tanh(z4) - z4 - a2*dphi*dpsi + dthetad - dtheta);
+	control.u3 = 1/b3*(-tanh(z6) - z6 - a3*dphi*dtheta + dpsid - dpsi);
 
 	Vector3f torque;
 	// torque(0) = control.u1;
@@ -167,3 +170,27 @@ Vector3f RateControl::smcControl(const Vector3f &att, const Vector3f &att_sp, co
 
 	return torque;
 }
+
+// void RateControl::setasmcParam(const float &a1, const float &r0, const float &alpha, const float d0
+// 					const float &e, const float &n, const float &gamma, const float &tau)
+// {
+// 	_asmc_a1 = a1;		_asmc_r0 = r0;		_asmc_alpha = alpha;		_asmc_d0 = d0;
+// 	_asmc_e = e;		_asmc_n = n;		_asmc_gamma = gamma;		_asmc_tau = tau;
+
+// 	setasmcInit();	//设定初始值
+// }
+
+// //设定控制状态量初始值
+// void RateControl::setasmcInit(){
+// 	_asmc_r = _asmc_r0;
+// }
+
+// //增加asmc的控制器
+// Vector3f RateControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, const Vector3f &rate, Vector3f &rate_sp,
+// 			    hrt_abstime now)
+// {
+// 	const Vector3f delta = rate - rate_sp;
+// 	const Vector3f sigma = att - att_sp + delta;
+
+// 	_asmc_rho = _asmc_r0 + _asmc_r;
+// }

@@ -207,6 +207,7 @@ set(msg_files
 	yaw_estimator_status.msg
 
 	# 自建msg
+	asmc_control.msg
 	smc_control.msg
 )
 

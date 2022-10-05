@@ -49,6 +49,7 @@
 #include <matrix/matrix/math.hpp>
 
 #include <uORB/topics/smc_control.h>
+#include <uORB/topics/asmc_control.h>
 
 class ASMCControl
 {
@@ -72,6 +73,13 @@ public:
 					const matrix::Vector3f &e, const matrix::Vector3f &n, const matrix::Vector3f &gamma, const matrix::Vector3f &tau);
 
 	/**
+	 * @brief 设定阈值
+	 *
+	 * @param sat
+	 */
+	void setSaturation(const float &sat);
+
+	/**
 	 * @brief 设定控制状态量的初始值
 	 *
 	 */
@@ -88,12 +96,31 @@ public:
 	 * @return Vector3f
 	 */
 	matrix::Vector3f asmcControl(const matrix::Vector3f &att, const matrix::Vector3f &att_sp, const matrix::Vector3f &rate, matrix::Vector3f &rate_sp,
-			    hrt_abstime now);
+			    hrt_abstime now, const float dt);
 
+	/**
+	 * @brief Get the States object
+	 *
+	 * @param asmccontrol
+	 */
+	void getStates(asmc_control_s &asmccontrol);
 private:
 
+	/**
+	 * @brief 对sign(x)函数做阈值处理
+	 *
+	 * @param sigma
+	 * @param sat
+	 * @return 1 if sigma > sat
+	 * 		    -1 if sigma < -sat
+	 * 		   sigma/sat	if -sat < sigma < sat
+	 */
+	float saturation(const float &sigma);
+
 	// Subscriptions
-	uORB:: Publication<smc_control_s>	_smc_control_pub{ORB_ID(smc_control)};
+	uORB::Publication<smc_control_s>	_smc_control_pub{ORB_ID(smc_control)};
+	uORB::Publication<asmc_control_s>	_asmc_control_pub{ORB_ID(asmc_control)};	//挪到McRateControl.run中
+																								//在外面记录信息不准确影响分析，还是在里面记录
 
 	// States
 	// matrix::Vector3f _rate_int; ///< integral term of the rate controller
@@ -102,10 +129,16 @@ private:
 	// matrix::Vector<bool, 3> _control_allocator_saturation_negative;
 	// matrix::Vector<bool, 3> _control_allocator_saturation_positive;
 
+	//asmc控制信息
+	asmc_control_s _asmccontrol;
+
 	//模型参数
 	const float _ixx = 0.03,	_iyy = 0.03,	_izz = 0.06;
 	const float _mass = 1.5;
 	const float _d = 0.66;	//电机离质心的距离
+
+	//sat函数阈值
+	float _saturation{1.f};
 
 	//asmc控制参数
 	matrix::Vector3f _asmc_a1;
@@ -121,7 +154,7 @@ private:
 	matrix::Vector3f _asmc_rho;
 
 	//asmc控制器状态量
-	matrix::Vector3f _asmc_ueq;
-	matrix::Vector3f _asmc_k;
-	matrix::Vector3f _asmc_r;
+	matrix::Vector3f _asmc_ueq{};
+	matrix::Vector3f _asmc_k{};
+	matrix::Vector3f _asmc_r{};
 };

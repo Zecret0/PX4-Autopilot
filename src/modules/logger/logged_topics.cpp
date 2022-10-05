@@ -185,7 +185,8 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic_multi("vehicle_magnetometer", 500, 4);
 
 	//自建msg
-	add_topic("smc_control", 50);
+	add_topic("smc_control", 100);
+	add_topic("asmc_control", 200);
 
 	// SYS_CTRL_ALLOC: additional dynamic control allocation logging when enabled
 	int32_t sys_ctrl_alloc = 0;
@@ -256,6 +257,9 @@ void LoggedTopics::add_high_rate_topics()
 	add_topic("vehicle_attitude");
 	add_topic("vehicle_attitude_setpoint");
 	add_topic("vehicle_rates_setpoint");
+
+	//asmc
+	//  add_topic("asmc_control");
 
 	if (_dynamic_control_allocation) {
 		add_topic("actuator_motors");

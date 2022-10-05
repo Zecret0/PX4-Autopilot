@@ -247,25 +247,36 @@ MulticopterRateControl::Run()
 			const Quatf q{v_att.q};
 			const Eulerf euler_att{Dcmf(q)};	//四元数->欧拉角
 			const Vector3f attitude(euler_att.phi(), euler_att.theta(), euler_att.psi());	//最终输入到控制器的当前姿态角
+			_attitude(0) = euler_att.phi();		_attitude(1) = euler_att.theta();	_attitude(2) = euler_att.psi();
 			vehicle_attitude_setpoint_s vsp_att;
 			_vehicle_attitude_setpoint_sub.update(&vsp_att);	//期望角度直接有欧拉角信息，直接使用不需要再做转换
+			_vehicle_attitude_setpoint_sub.update(&_vsp_att);
 			const Vector3f attitude_sp(vsp_att.roll_body, vsp_att.pitch_body, vsp_att.yaw_body);	//还是要构造输入的期望姿态角矩阵
+			_attitude_sp(0) = vsp_att.roll_body;	_attitude_sp(1) = vsp_att.pitch_body;	_attitude_sp(2) = vsp_att.yaw_body;
 
 			//姿态滑膜控制器
-			// const Vector3f att_control = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
+			const Vector3f att_control1 = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
 			//姿态ASMC控制器
 			//处理控制器参数
-			// Vector3f asmc_a1(_param_asmc_x_a1.get(), _param_asmc_y_a1.get(), _param_asmc_z_a1.get());
-			// Vector3f asmc_r0(_param_asmc_x_r0.get(), _param_asmc_y_r0.get(), _param_asmc_z_r0.get());
-			// Vector3f asmc_alpha(_param_asmc_x_alpha.get(), _param_asmc_y_alpha.get(), _param_asmc_z_alpha.get());
-			// Vector3f asmc_d0(_param_asmc_x_d0.get(), _param_asmc_y_d0.get(), _param_asmc_z_d0.get());
-			// Vector3f asmc_e(_param_asmc_x_e.get(), _param_asmc_y_e.get(), _param_asmc_z_e.get());
-			// Vector3f asmc_n(_param_asmc_x_n.get(), _param_asmc_y_n.get(), _param_asmc_z_n.get());
-			// Vector3f asmc_gamma(_param_asmc_x_gamma.get(), _param_asmc_y_gamma.get(), _param_asmc_z_gamma.get());
-			// Vector3f asmc_tau(_param_asmc_x_tau.get(), _param_asmc_y_tau.get(), _param_asmc_z_tau.get());
-			// _asmc_control.setasmcParam(asmc_a1,asmc_r0, asmc_alpha, asmc_d0, asmc_e,
-			// 				asmc_n, asmc_gamma, asmc_tau);
-			const Vector3f att_control = _asmc_control.asmcControl(attitude, attitude_sp, rates, _rates_sp, now);
+			Vector3f asmc_a1(_param_asmc_x_a1.get(), _param_asmc_y_a1.get(), _param_asmc_z_a1.get());
+			Vector3f asmc_r0(_param_asmc_x_r0.get(), _param_asmc_y_r0.get(), _param_asmc_z_r0.get());
+			Vector3f asmc_alpha(_param_asmc_x_alpha.get(), _param_asmc_y_alpha.get(), _param_asmc_z_alpha.get());
+			Vector3f asmc_d0(_param_asmc_x_d0.get(), _param_asmc_y_d0.get(), _param_asmc_z_d0.get());
+			Vector3f asmc_e(_param_asmc_x_e.get(), _param_asmc_y_e.get(), _param_asmc_z_e.get());
+			Vector3f asmc_n(_param_asmc_x_n.get(), _param_asmc_y_n.get(), _param_asmc_z_n.get());
+			Vector3f asmc_gamma(_param_asmc_x_gamma.get(), _param_asmc_y_gamma.get(), _param_asmc_z_gamma.get());
+			Vector3f asmc_tau(_param_asmc_x_tau.get(), _param_asmc_y_tau.get(), _param_asmc_z_tau.get());
+			_asmc_control.setasmcParam(asmc_a1,asmc_r0, asmc_alpha, asmc_d0, asmc_e,
+							asmc_n, asmc_gamma, asmc_tau);
+			// _asmc_setSaturation(_param_asmc_sat.get());
+			// const Vector3f att_control = _asmc_control.asmcControl(attitude, attitude_sp, rates, _rates_sp, now, dt);
+			const Vector3f att_control = _asmc_control.asmcControl(_attitude, _attitude_sp, rates, _rates_sp, now, dt);
+
+			//for log
+			// asmc_control_s asmccontrol{};
+			// asmccontrol.timestamp = now;
+			// _asmc_control.getStates(asmccontrol);
+			// _asmc_control_pub.publish(asmccontrol);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};
@@ -276,8 +287,10 @@ MulticopterRateControl::Run()
 			// publish actuator controls
 			actuator_controls_s actuators{};
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;
-			actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.0f;
-			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
+			actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control1(1)) ? att_control1(1) : 0.0f;
+			// actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.0f;
+			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control1(2)) ? att_control1(2) : 0.0f;
+			// actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;

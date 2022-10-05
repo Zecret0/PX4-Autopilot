@@ -69,6 +69,8 @@
 #include <uORB/topics/smc_control.h>
 #include <uORB/topics/vehicle_attitude.h>
 #include <uORB/topics/vehicle_attitude_setpoint.h>
+//ASMCtest
+#include <uORB/topics/asmc_control.h>
 
 using namespace time_literals;
 
@@ -131,6 +133,8 @@ private:
 	uORB::Publication<vehicle_rates_setpoint_s>	_v_rates_sp_pub{ORB_ID(vehicle_rates_setpoint)};
 	uORB::Publication<vehicle_thrust_setpoint_s>	_vehicle_thrust_setpoint_pub{ORB_ID(vehicle_thrust_setpoint)};
 	uORB::Publication<vehicle_torque_setpoint_s>	_vehicle_torque_setpoint_pub{ORB_ID(vehicle_torque_setpoint)};
+	//for ASMC log
+	uORB::Publication<asmc_control_s>	_asmc_control_pub{ORB_ID(asmc_control)};
 
 	orb_advert_t _mavlink_log_pub{nullptr};
 
@@ -192,6 +196,8 @@ private:
 
 
 		// //asmc控制器参数
+		// (ParamFloat<px4::params::ASMC_SAT>) _param_asmc_sat,
+
 		(ParamFloat<px4::params::ASMC_X_A1>) _param_asmc_x_a1,
 		(ParamFloat<px4::params::ASMC_Y_A1>) _param_asmc_y_a1,
 		(ParamFloat<px4::params::ASMC_Z_A1>) _param_asmc_z_a1,
@@ -222,5 +228,9 @@ private:
 	);
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
+
+	matrix::Vector3f _attitude;	//vehicle attitude(for asmc control)
+	matrix::Vector3f _attitude_sp;	//vehicle attitude setpoint(for asmc control)
+	vehicle_attitude_setpoint_s _vsp_att;	//for asmc control
 
 };

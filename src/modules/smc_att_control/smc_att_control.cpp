@@ -292,3 +292,5 @@ void SMCAttControl::updateActuatorControlsStatus(const actuator_controls_s &actu
 		_energy_integration_time = 0.f;
 	}
 }
+
+// void SMCAttControl::smc_sign

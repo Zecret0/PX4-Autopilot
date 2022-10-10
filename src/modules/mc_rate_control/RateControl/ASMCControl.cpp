@@ -108,6 +108,7 @@ float ASMCControl::filterf(const float &value)
 	for (int i = 0; i < 12; i++)
 	{
 		sum+=value;
+
 	}
 	return (sum / 12.f);
 
@@ -123,8 +124,8 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 
 	rate_sp.setZero();	//期望角速度 = 0；
 	const Vector3f derr = rate - rate_sp;
-	const Vector3f sigma = filter(att) - filter(att_sp) + 0.1f*derr;
-	// const Vector3f sigma = att - att_sp + 0.1f*derr;
+	// const Vector3f sigma = filter(att) - filter(att_sp) + 0.1f*derr;
+	const Vector3f sigma = att - att_sp + 0.1f*derr;
 	// const Vector3f sigma = att - att_sp + derr;
 
 	_asmc_rho = _asmc_r0 + _asmc_r;
@@ -164,9 +165,9 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 	//测试定值增益
 	// torque(0) = -(_asmc_k(0) + _asmc_n(0))*tanh(sigma(0));
 	//测试sat函数代替sign函数
-	torque(0) = -(1.5f)*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
+	// torque(0) = -(1.2f)*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
 	// torque(0) = -(0.7f)*tanh(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
-	// torque(0) = -(_asmc_k(0) + _asmc_n(0))*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - derr(0);
+	torque(0) = -(_asmc_k(0) + _asmc_n(0))*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
 	torque(1) = -(_asmc_k(1) + _asmc_n(1))*sign(sigma(1)) - rate(0)*rate(2)*(_izz - _ixx)/_iyy - derr(1);
 	torque(2) = -(_asmc_k(2) + _asmc_n(2))*sign(sigma(2)) - rate(0)*rate(1)*(_ixx - _iyy)/_izz - derr(2);
 

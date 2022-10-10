@@ -39,6 +39,7 @@
 #include <mathlib/math/Functions.hpp>
 #include <px4_platform_common/events.h>
 
+
 using namespace matrix;
 using namespace time_literals;
 using math::radians;
@@ -63,7 +64,8 @@ MulticopterRateControl::~MulticopterRateControl()
 bool
 MulticopterRateControl::init()
 {
-	if (!_vehicle_angular_velocity_sub.registerCallback()) {
+	if (!_vehicle_attitude_sub.registerCallback()) {
+	// if (!_vehicle_angular_velocity_sub.registerCallback()) {
 		PX4_ERR("callback registration failed");
 		return false;
 	}
@@ -136,6 +138,7 @@ MulticopterRateControl::Run()
 
 		const Vector3f angular_accel{v_angular_acceleration.xyz};
 		const Vector3f rates{angular_velocity.xyz};
+		_rates = rates;
 
 		/* check for updates in other topics */
 		_v_control_mode_sub.update(&_v_control_mode);
@@ -243,7 +246,7 @@ MulticopterRateControl::Run()
 			//Ziy	替换姿态控制器
 			//先处理角度信息（四元数->欧拉角
 			vehicle_attitude_s v_att;
-			_vehilce_attitude_sub.update(&v_att);	//获取无人机当前姿态信息
+			_vehicle_attitude_sub.update(&v_att);	//获取无人机当前姿态信息
 			const Quatf q{v_att.q};
 			const Eulerf euler_att{Dcmf(q)};	//四元数->欧拉角
 			const Vector3f attitude(euler_att.phi(), euler_att.theta(), euler_att.psi());	//最终输入到控制器的当前姿态角
@@ -252,7 +255,7 @@ MulticopterRateControl::Run()
 			_vehicle_attitude_setpoint_sub.update(&vsp_att);	//期望角度直接有欧拉角信息，直接使用不需要再做转换
 			_vehicle_attitude_setpoint_sub.update(&_vsp_att);
 			const Vector3f attitude_sp(vsp_att.roll_body, vsp_att.pitch_body, vsp_att.yaw_body);	//还是要构造输入的期望姿态角矩阵
-			_attitude_sp(0) = vsp_att.roll_body;	_attitude_sp(1) = vsp_att.pitch_body;	_attitude_sp(2) = vsp_att.yaw_body;
+			_attitude_sp(0) = _vsp_att.roll_body;	_attitude_sp(1) = _vsp_att.pitch_body;	_attitude_sp(2) = _vsp_att.yaw_body;
 
 			//姿态滑膜控制器
 			// const Vector3f att_control1 = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);

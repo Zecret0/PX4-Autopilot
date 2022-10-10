@@ -72,6 +72,7 @@
 //ASMCtest
 #include <uORB/topics/asmc_control.h>
 
+
 using namespace time_literals;
 
 class MulticopterRateControl : public ModuleBase<MulticopterRateControl>, public ModuleParams, public px4::WorkItem
@@ -119,7 +120,7 @@ private:
 	//SMCtest
 	uORB::Subscription _smc_att_control_sub{ORB_ID(smc_control)};
 	//获取当前角度
-	uORB::Subscription	_vehilce_attitude_sub{ORB_ID(vehicle_attitude)};
+	uORB::SubscriptionCallbackWorkItem	_vehicle_attitude_sub{this, ORB_ID(vehicle_attitude)};
 	//获取期望角度
 	uORB::Subscription	_vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
 
@@ -232,5 +233,6 @@ private:
 	matrix::Vector3f _attitude;	//vehicle attitude(for asmc control)
 	matrix::Vector3f _attitude_sp;	//vehicle attitude setpoint(for asmc control)
 	vehicle_attitude_setpoint_s _vsp_att;	//for asmc control
+	matrix::Vector3f _rates;
 
 };

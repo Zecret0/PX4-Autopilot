@@ -239,7 +239,7 @@ MulticopterRateControl::Run()
 			}
 
 			// run rate controller
-			// const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
+			const Vector3f att_control1 = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
 			//Ziy	替换姿态控制器
 			//先处理角度信息（四元数->欧拉角
 			vehicle_attitude_s v_att;
@@ -255,7 +255,7 @@ MulticopterRateControl::Run()
 			_attitude_sp(0) = vsp_att.roll_body;	_attitude_sp(1) = vsp_att.pitch_body;	_attitude_sp(2) = vsp_att.yaw_body;
 
 			//姿态滑膜控制器
-			const Vector3f att_control1 = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
+			// const Vector3f att_control1 = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
 			//姿态ASMC控制器
 			//处理控制器参数
 			Vector3f asmc_a1(_param_asmc_x_a1.get(), _param_asmc_y_a1.get(), _param_asmc_z_a1.get());

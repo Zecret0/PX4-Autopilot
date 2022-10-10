@@ -85,7 +85,31 @@ float ASMCControl::saturation(const float &sigma)
 	{
 		return (sigma/_saturation);
 	}
+}
 
+//限幅平均滤波
+Vector3f ASMCControl::filter(const Vector3f &torque)
+{
+	Vector3f sum(0, 0, 0);
+	// _filter_torque = torque;
+
+	for (int i = 0; i < 12; i++)
+	{
+		sum += torque;
+	}
+
+	return (sum/12);
+
+}
+
+float ASMCControl::filterf(const float &value)
+{
+	float sum = 0;
+	for (int i = 0; i < 12; i++)
+	{
+		sum+=value;
+	}
+	return (sum / 12.f);
 
 }
 
@@ -99,7 +123,8 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 
 	rate_sp.setZero();	//期望角速度 = 0；
 	const Vector3f derr = rate - rate_sp;
-	const Vector3f sigma = att - att_sp + 0.1f*derr;
+	const Vector3f sigma = filter(att) - filter(att_sp) + 0.1f*derr;
+	// const Vector3f sigma = att - att_sp + 0.1f*derr;
 	// const Vector3f sigma = att - att_sp + derr;
 
 	_asmc_rho = _asmc_r0 + _asmc_r;
@@ -109,12 +134,14 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 	Vector3f delta;
 	for (int i = 0; i < 3; i++)	//有1/Vectro3f 的操作，不知道怎么处理，于是分开写
 	{
-		ut(i) = -(_asmc_k(i) + _asmc_n(i))*tanh(sigma(i));
+		ut(i) = -(_asmc_k(i) + _asmc_n(i))*saturation(sigma(i));
+		// ut(i) = -(_asmc_k(i) + _asmc_n(i))*tanh(sigma(i));
 		// ut(i) = -(_asmc_k(i) + _asmc_n(i))*sign(sigma(i));
 		delta(i) = _asmc_k(i) - 1/_asmc_alpha(i)*abs(_asmc_ueq(i)) - _asmc_e(i);
 		_asmc_ueq(i) += 1/_asmc_tau(i)*(ut(i) - _asmc_ueq(i))*dt;
 		// _asmc_ueq(i) = (1 - 1/_asmc_tau(i))*_asmc_ueq(i) + 1/_asmc_tau(i)*ut(i);
-		_asmc_k(i) += -_asmc_rho(i)*tanh(delta(i))*dt;
+		_asmc_k(i) += -_asmc_rho(i)*saturation(delta(i))*dt;
+		// _asmc_k(i) += -_asmc_rho(i)*tanh(delta(i))*dt;
 		// _asmc_k(i) += -_asmc_rho(i)*sign(delta(i))*dt;
 
 		if (abs(delta(i)) > _asmc_d0(i))
@@ -137,9 +164,9 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 	//测试定值增益
 	// torque(0) = -(_asmc_k(0) + _asmc_n(0))*tanh(sigma(0));
 	//测试sat函数代替sign函数
-	torque(0) = -(1.2f)*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
+	torque(0) = -(1.5f)*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
 	// torque(0) = -(0.7f)*tanh(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - 0.1f*derr(0);
-	// torque(0) = -(_asmc_k(0) + _asmc_n(0))*tanh(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - derr(0);
+	// torque(0) = -(_asmc_k(0) + _asmc_n(0))*saturation(sigma(0)) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - derr(0);
 	torque(1) = -(_asmc_k(1) + _asmc_n(1))*sign(sigma(1)) - rate(0)*rate(2)*(_izz - _ixx)/_iyy - derr(1);
 	torque(2) = -(_asmc_k(2) + _asmc_n(2))*sign(sigma(2)) - rate(0)*rate(1)*(_ixx - _iyy)/_izz - derr(2);
 
@@ -150,8 +177,10 @@ Vector3f ASMCControl::asmcControl(const Vector3f &att, const Vector3f &att_sp, c
 	//for log
 	for (int i = 0; i < 3; i++)
 	{
-		_asmccontrol.att[i] = att(i);
-		_asmccontrol.att_sp[i] = att_sp(i);
+		_asmccontrol.att[i] = filterf(att(i));
+		// _asmccontrol.att[i] = att(i);
+		_asmccontrol.att_sp[i] = filterf(att_sp(i));
+		// _asmccontrol.att_sp[i] = att_sp(i);
 
 		_asmccontrol.ueq[i] = _asmc_ueq(i);
 		_asmccontrol.k[i] = _asmc_k(i);

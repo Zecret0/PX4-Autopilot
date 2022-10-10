@@ -117,6 +117,15 @@ private:
 	 */
 	float saturation(const float &sigma);
 
+	/**
+	 * @brief 对输出控制量做限幅平均滤波
+	 *
+	 * @param torque
+	 * @return Vector3f	滤波后的控制输入
+	 */
+	matrix::Vector3f filter(const matrix::Vector3f &torque);
+	float filterf(const float &torque);
+
 	// Subscriptions
 	uORB::Publication<smc_control_s>	_smc_control_pub{ORB_ID(smc_control)};
 	uORB::Publication<asmc_control_s>	_asmc_control_pub{ORB_ID(asmc_control)};	//挪到McRateControl.run中
@@ -138,7 +147,11 @@ private:
 	const float _d = 0.66;	//电机离质心的距离
 
 	//sat函数阈值
-	float _saturation{1.f};
+	float _saturation{1.0f};
+
+	//滤波器参数
+	// matrix::Vector3f _filter_torque(0, 0, 0);
+
 
 	//asmc控制参数
 	matrix::Vector3f _asmc_a1;

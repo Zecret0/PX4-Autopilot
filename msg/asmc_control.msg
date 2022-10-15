@@ -19,3 +19,5 @@ float32[3] rho
 # vehicle attitude
 float32[3] att
 float32[3] att_sp
+float32[3] rate
+float32[3] rate_sp

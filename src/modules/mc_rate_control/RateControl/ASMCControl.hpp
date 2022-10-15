@@ -47,9 +47,11 @@
 #include <drivers/drv_hrt.h>
 #include <uORB/Publication.hpp>
 #include <matrix/matrix/math.hpp>
+#include <uORB/Subscription.hpp>
 
 #include <uORB/topics/smc_control.h>
 #include <uORB/topics/asmc_control.h>
+#include <uORB/topics/vehicle_local_position.h>
 
 class ASMCControl
 {
@@ -115,7 +117,7 @@ private:
 	 * 		    -1 if sigma < -sat
 	 * 		   sigma/sat	if -sat < sigma < sat
 	 */
-	float saturation(const float &sigma);
+	float saturation(const float &sigma, const float saturation);
 
 	/**
 	 * @brief 对输出控制量做限幅平均滤波
@@ -126,7 +128,10 @@ private:
 	matrix::Vector3f filter(const matrix::Vector3f &torque);
 	float filterf(const float &torque);
 
-	// Subscriptions
+	//Subscription
+	uORB::Subscription _vehicle_local_pos_sub{ORB_ID(vehicle_local_position)};
+
+	// Publish
 	uORB::Publication<smc_control_s>	_smc_control_pub{ORB_ID(smc_control)};
 	uORB::Publication<asmc_control_s>	_asmc_control_pub{ORB_ID(asmc_control)};	//挪到McRateControl.run中
 																								//在外面记录信息不准确影响分析，还是在里面记录
@@ -138,16 +143,22 @@ private:
 	// matrix::Vector<bool, 3> _control_allocator_saturation_negative;
 	// matrix::Vector<bool, 3> _control_allocator_saturation_positive;
 
+	//无人机位置信息
+	vehicle_local_position_s _local_pos;
+	float _t{0};
+
 	//asmc控制信息
 	asmc_control_s _asmccontrol;
 
 	//模型参数
-	const float _ixx = 0.03,	_iyy = 0.03,	_izz = 0.06;
-	const float _mass = 1.5;
+	// const float _ixx = 0.003,	_iyy = 0.003,	_izz = 0.006;	//实机
+	const float _ixx = 0.03,	_iyy = 0.03,	_izz = 0.06;	//仿真参数
+	const float _mass = 1.5;	//仿真参数
+	// const float _mass = 0.553;
 	const float _d = 0.66;	//电机离质心的距离
 
 	//sat函数阈值
-	float _saturation{1.0f};
+	float _saturation{0.8f};
 
 	//滤波器参数
 	// matrix::Vector3f _filter_torque(0, 0, 0);

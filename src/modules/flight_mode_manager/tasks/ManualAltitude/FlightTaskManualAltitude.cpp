@@ -96,7 +96,10 @@ void FlightTaskManualAltitude::_scaleSticks()
 {
 	// Use stick input with deadzone, exponential curve and first order lpf for yawspeed
 	const float yawspeed_target = _sticks.getPositionExpo()(3) * math::radians(_param_mpc_man_y_max.get());
-	_yawspeed_setpoint = _applyYawspeedFilter(yawspeed_target);
+	//改为直接给定偏航角
+	// _yaw_setpoint = _applyYawspeedFilter(yawspeed_target);
+	// _yawspeed_setpoint = NAN;
+	_yawspeed_setpoint = _applyYawspeedFilter(yawspeed_target);	//只保留这个偏航控制无效
 
 	// Use sticks input with deadzone and exponential curve for vertical velocity
 	const float vel_max_z = (_sticks.getPosition()(2) > 0.0f) ? _param_mpc_z_vel_max_dn.get() :

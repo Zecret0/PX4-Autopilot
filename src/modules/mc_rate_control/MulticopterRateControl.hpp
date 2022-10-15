@@ -71,7 +71,7 @@
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 //ASMCtest
 #include <uORB/topics/asmc_control.h>
-
+#include <uORB/topics/rc_channels.h>
 
 using namespace time_literals;
 
@@ -123,6 +123,9 @@ private:
 	uORB::SubscriptionCallbackWorkItem	_vehicle_attitude_sub{this, ORB_ID(vehicle_attitude)};
 	//获取期望角度
 	uORB::Subscription	_vehicle_attitude_setpoint_sub{ORB_ID(vehicle_attitude_setpoint)};
+	//增加订阅遥控器通道信息
+	uORB::Subscription _rc_channels_sub{ORB_ID(rc_channels)};
+	rc_channels_s _rc_channels;
 
 	uORB::SubscriptionInterval _parameter_update_sub{ORB_ID(parameter_update), 1_s};
 

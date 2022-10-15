@@ -251,11 +251,12 @@ MulticopterRateControl::Run()
 			const Eulerf euler_att{Dcmf(q)};	//四元数->欧拉角
 			const Vector3f attitude(euler_att.phi(), euler_att.theta(), euler_att.psi());	//最终输入到控制器的当前姿态角
 			_attitude(0) = euler_att.phi();		_attitude(1) = euler_att.theta();	_attitude(2) = euler_att.psi();
-			vehicle_attitude_setpoint_s vsp_att;
-			_vehicle_attitude_setpoint_sub.update(&vsp_att);	//期望角度直接有欧拉角信息，直接使用不需要再做转换
+			// vehicle_attitude_setpoint_s vsp_att;
+			// _vehicle_attitude_setpoint_sub.update(&vsp_att);	//期望角度直接有欧拉角信息，直接使用不需要再做转换
 			_vehicle_attitude_setpoint_sub.update(&_vsp_att);
-			const Vector3f attitude_sp(vsp_att.roll_body, vsp_att.pitch_body, vsp_att.yaw_body);	//还是要构造输入的期望姿态角矩阵
+			// const Vector3f attitude_sp(vsp_att.roll_body, vsp_att.pitch_body, vsp_att.yaw_body);	//还是要构造输入的期望姿态角矩阵
 			_attitude_sp(0) = _vsp_att.roll_body;	_attitude_sp(1) = _vsp_att.pitch_body;	_attitude_sp(2) = _vsp_att.yaw_body;
+			// _attitude_sp(0) = vsp_att.roll_body;	_attitude_sp(1) = vsp_att.pitch_body;	_attitude_sp(2) = vsp_att.yaw_body;
 
 			//姿态滑膜控制器
 			// const Vector3f att_control1 = _rate_control.smcControl(attitude, attitude_sp, rates, _rates_sp, now);
@@ -273,6 +274,7 @@ MulticopterRateControl::Run()
 							asmc_n, asmc_gamma, asmc_tau);
 			// _asmc_setSaturation(_param_asmc_sat.get());
 			// const Vector3f att_control = _asmc_control.asmcControl(attitude, attitude_sp, rates, _rates_sp, now, dt);
+			//ASMC控制器
 			const Vector3f att_control = _asmc_control.asmcControl(_attitude, _attitude_sp, rates, _rates_sp, now, dt);
 
 			//for log
@@ -287,13 +289,27 @@ MulticopterRateControl::Run()
 			rate_ctrl_status.timestamp = hrt_absolute_time();
 			_controller_status_pub.publish(rate_ctrl_status);
 
+			//切换控制器
+			_rc_channels_sub.update(&_rc_channels);
+
 			// publish actuator controls
 			actuator_controls_s actuators{};
+			//实机测试
+			// if (_rc_channels.channels[7] > 0.5f)
+			// {
+			// 	actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;
+			// } else
+			// {
+			// 	actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control1(0)) ? att_control1(0) : 0.0f;
+			// }
+
+
+			// actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control1(0)) ? att_control(0) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control1(1)) ? att_control1(1) : 0.0f;
 			// actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.0f;
-			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control1(2)) ? att_control1(2) : 0.0f;
-			// actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
+			// actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control1(2)) ? att_control1(2) : 0.0f;
+			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;

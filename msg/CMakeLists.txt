@@ -209,6 +209,7 @@ set(msg_files
 	# 自建msg
 	asmc_control.msg
 	smc_control.msg
+	adrc.msg
 )
 
 if(NOT px4_constrained_flash_build)

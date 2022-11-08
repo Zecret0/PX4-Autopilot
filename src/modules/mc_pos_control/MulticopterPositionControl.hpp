@@ -226,4 +226,7 @@ private:
 	 * Reset setpoints to NAN
 	 */
 	void reset_setpoint_to_nan(vehicle_local_position_setpoint_s &setpoint);
+
+	float _count{0};
+	float _t{0};
 };

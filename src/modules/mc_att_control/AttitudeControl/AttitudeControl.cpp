@@ -56,6 +56,7 @@ matrix::Vector3f AttitudeControl::update(const Quatf &q) const
 {
 	Quatf qd = _attitude_setpoint_q;
 
+
 	// calculate reduced desired attitude neglecting vehicle's yaw to prioritize roll and pitch
 	const Vector3f e_z = q.dcm_z();
 	const Vector3f e_z_d = qd.dcm_z();

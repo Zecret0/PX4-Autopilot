@@ -533,7 +533,26 @@ void MulticopterPositionControl::Run()
 			// Publish attitude setpoint output
 			vehicle_attitude_setpoint_s attitude_setpoint{};
 			_control.getAttitudeSetpoint(attitude_setpoint);
+
+			_count += dt;
+			// const Eulerf euler_att{Dcmf(attitude_setpoint.q_d)};	//四元数->欧拉角
+			float phid = attitude_setpoint.roll_body;
+			float thetad = attitude_setpoint.pitch_body;
+			float psid = attitude_setpoint.yaw_body;
+			// if (_count > 20)
+			// {
+			// 	phid = 0.2f*sinf(_t);
+			// 	attitude_setpoint.roll_body = phid;
+
+			// 	_t += dt;
+			// }
+
+			const Eulerf z_eulerattd{phid, thetad, psid};
+			const Quatf z_qd{z_eulerattd};
+
 			attitude_setpoint.timestamp = hrt_absolute_time();
+			// attitude_setpoint.q_d = z_qd;
+			z_qd.copyTo(attitude_setpoint.q_d);
 			_vehicle_attitude_setpoint_pub.publish(attitude_setpoint);
 
 		} else {

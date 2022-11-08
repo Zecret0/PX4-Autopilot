@@ -162,5 +162,8 @@ private:
 		(ParamInt<px4::params::MC_AIRMODE>) _param_mc_airmode,
 		(ParamFloat<px4::params::MC_MAN_TILT_TAU>) _param_mc_man_tilt_tau
 	)
+
+	float _count{0};
+	float _t{0};
 };
 

@@ -101,11 +101,33 @@ public:
 			    hrt_abstime now, const float dt);
 
 	/**
+	 * @brief Adaptive Sliding Mode Controller version1.1
+	 *
+	 * @param att
+	 * @param att_sp
+	 * @param rate
+	 * @param now
+	 * @param dt
+	 * @return matrix::Vector3f
+	 */
+	matrix::Vector3f asmcControl1(const matrix::Vector3f &att, const matrix::Vector3f &att_sp, const matrix::Vector3f &rate,
+			    hrt_abstime now, const float dt);
+	/**
 	 * @brief Get the States object
 	 *
 	 * @param asmccontrol
 	 */
 	void getStates(asmc_control_s &asmccontrol);
+
+	/**
+	 * @brief 计算扰动量
+	 *
+	 * @param angular_accel
+	 * @param output
+	 * @param mix
+	 * @param now
+	 */
+	void disturbanceCal(const float angular_accel, const float output, const float mix, hrt_abstime now);
 private:
 
 	/**
@@ -146,9 +168,12 @@ private:
 	//无人机位置信息
 	vehicle_local_position_s _local_pos;
 	float _t{0};
+	float _count{0};
 
 	//asmc控制信息
 	asmc_control_s _asmccontrol;
+
+	matrix::Vector3f _x2c_;		//上一时刻观测的虚拟控制量
 
 	//模型参数
 	// const float _ixx = 0.003,	_iyy = 0.003,	_izz = 0.006;	//实机
@@ -158,11 +183,16 @@ private:
 	const float _d = 0.66;	//电机离质心的距离
 
 	//sat函数阈值
-	float _saturation{0.8f};
+	float _saturation{0.3f};	//0.3f
+
+	//控制量derr前系数c
+	float _derrc{1.0f};
 
 	//滤波器参数
 	// matrix::Vector3f _filter_torque(0, 0, 0);
 
+	//控制分配放缩系数
+	float _scale{50.f};	//追踪正弦信号-------20
 
 	//asmc控制参数
 	matrix::Vector3f _asmc_a1;

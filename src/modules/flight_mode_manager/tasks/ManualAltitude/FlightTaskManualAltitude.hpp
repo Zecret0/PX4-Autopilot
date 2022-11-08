@@ -149,4 +149,7 @@ private:
 	float _dist_to_ground_lock = NAN;
 
 	AlphaFilter<matrix::Vector2f> _man_input_filter;
+
+	//sinf函数自变量时间
+	float _t{0};
 };

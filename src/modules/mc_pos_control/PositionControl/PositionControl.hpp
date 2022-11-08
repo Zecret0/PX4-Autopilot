@@ -44,6 +44,9 @@
 #include <uORB/topics/vehicle_attitude_setpoint.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
 
+#include <uORB/Subscription.hpp>
+#include <uORB/topics/vehicle_local_position.h>
+
 struct PositionControlStates {
 	matrix::Vector3f position;
 	matrix::Vector3f velocity;
@@ -216,4 +219,12 @@ private:
 	matrix::Vector3f _thr_sp; /**< desired thrust */
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
+
+	//Subscription
+	uORB::Subscription _vehicle_local_pos_sub{ORB_ID(vehicle_local_position)};
+	vehicle_local_position_s _local_pos;
+
+	//sin函数时间输入
+	float _t;
+	float _count{0};
 };

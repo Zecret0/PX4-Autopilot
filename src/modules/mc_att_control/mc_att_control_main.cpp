@@ -329,6 +329,22 @@ MulticopterAttitudeControl::Run()
 				_man_y_input_filter.reset(0.f);
 			}
 
+			// _count += dt;
+			// const Eulerf euler_att{Dcmf(q)};	//四元数->欧拉角
+			// float phid = euler_att.phi();
+			// float thetad = euler_att.theta();
+			// float psid = euler_att.psi();
+			// if (_count > 20)
+			// {
+			// 	phid = 0.2f*sinf(_t);
+
+			// 	_t += dt;
+			// }
+
+			// const Eulerf z_eulerattd{phid, thetad, psid};
+			// const Quatf z_qd{z_eulerattd};
+
+			// Vector3f rates_sp = _attitude_control.update(z_qd);
 			Vector3f rates_sp = _attitude_control.update(q);
 
 			const hrt_abstime now = hrt_absolute_time();

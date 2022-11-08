@@ -275,13 +275,15 @@ MulticopterRateControl::Run()
 			// _asmc_setSaturation(_param_asmc_sat.get());
 			// const Vector3f att_control = _asmc_control.asmcControl(attitude, attitude_sp, rates, _rates_sp, now, dt);
 			//ASMC控制器
-			const Vector3f att_control = _asmc_control.asmcControl(_attitude, _attitude_sp, rates, _rates_sp, now, dt);
+			// const Vector3f att_control = _asmc_control.asmcControl(_attitude, _attitude_sp, rates, _rates_sp, now, dt);
+			const Vector3f att_control = _asmc_control.asmcControl1(_attitude, _attitude_sp, rates, now, dt);	//优化版
 
 			//for log
 			// asmc_control_s asmccontrol{};
 			// asmccontrol.timestamp = now;
 			// _asmc_control.getStates(asmccontrol);
 			// _asmc_control_pub.publish(asmccontrol);
+			_asmc_control.disturbanceCal(angular_accel(0), att_control(0), rates(1)*rates(2), now);
 
 			// publish rate controller status
 			rate_ctrl_status_s rate_ctrl_status{};
@@ -304,12 +306,12 @@ MulticopterRateControl::Run()
 			// }
 
 
-			// actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control1(0)) ? att_control(0) : 0.0f;
+			// actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control1(0)) ? att_control1(0) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control1(1)) ? att_control1(1) : 0.0f;
 			// actuators.control[actuator_controls_s::INDEX_PITCH] = PX4_ISFINITE(att_control(1)) ? att_control(1) : 0.0f;
-			// actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control1(2)) ? att_control1(2) : 0.0f;
-			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
+			actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control1(2)) ? att_control1(2) : 0.0f;
+			// actuators.control[actuator_controls_s::INDEX_YAW] = PX4_ISFINITE(att_control(2)) ? att_control(2) : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_THROTTLE] = PX4_ISFINITE(_thrust_sp) ? _thrust_sp : 0.0f;
 			actuators.control[actuator_controls_s::INDEX_LANDING_GEAR] = _landing_gear;
 			actuators.timestamp_sample = angular_velocity.timestamp_sample;
@@ -323,7 +325,8 @@ MulticopterRateControl::Run()
 			// math::constrain(actuators.control[actuator_controls_s::INDEX_YAW], -1.0f, 1.0f);
 
 			if (!_vehicle_status.is_vtol) {
-				publishTorqueSetpoint(att_control, angular_velocity.timestamp_sample);
+				// publishTorqueSetpoint(att_control1, angular_velocity.timestamp_sample);
+				publishTorqueSetpoint(att_control, angular_velocity.timestamp_sample);	//ASMC
 				publishThrustSetpoint(angular_velocity.timestamp_sample);
 			}
 

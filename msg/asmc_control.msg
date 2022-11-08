@@ -1,6 +1,7 @@
 uint64 timestamp
 
 # controller output
+float32[3] torque
 float32[3] u
 
 # controller states
@@ -21,3 +22,8 @@ float32[3] att
 float32[3] att_sp
 float32[3] rate
 float32[3] rate_sp
+
+float32[3] dx2c
+
+# vehicle disturbance
+float32[3] dis

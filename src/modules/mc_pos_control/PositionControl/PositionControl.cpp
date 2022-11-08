@@ -105,8 +105,18 @@ void PositionControl::setInputSetpoint(const vehicle_local_position_setpoint_s &
 bool PositionControl::update(const float dt)
 {
 	bool valid = _inputValid();
+	_count += dt;
 
 	if (valid) {
+		//PID正弦滚转信号追踪测试
+		_vehicle_local_pos_sub.update(&_local_pos);
+		// if (_local_pos.z < -10.f)
+		if (_count > 20)
+		{
+			// _pos_sp(0) = 2*sinf(_t);
+			_t += dt;
+		}
+
 		_positionControl();
 		_velocityControl(dt);
 

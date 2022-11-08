@@ -187,6 +187,7 @@ void LoggedTopics::add_default_topics()
 	//自建msg
 	add_topic("smc_control", 100);
 	add_topic("asmc_control", 200);
+	add_topic("adrc", 200);
 	add_topic("rc_channels", 200);
 
 	// SYS_CTRL_ALLOC: additional dynamic control allocation logging when enabled

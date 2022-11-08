@@ -43,6 +43,7 @@
 
 #include <lib/mixer/MultirotorMixer/MultirotorMixer.hpp>
 #include <uORB/topics/rate_ctrl_status.h>
+#include <ADRC.hpp>
 
 #include <drivers/drv_hrt.h>
 #include <uORB/Publication.hpp>
@@ -112,6 +113,18 @@ public:
 	 */
 	matrix::Vector3f asmcControl1(const matrix::Vector3f &att, const matrix::Vector3f &att_sp, const matrix::Vector3f &rate,
 			    hrt_abstime now, const float dt);
+
+	/**
+	 * @brief Adaptive Sliding Mode Control with Extended States Observer
+	 *
+	 * @param att
+	 * @param att_sp
+	 * @param rate
+	 * @param now
+	 * @param dt
+	 */
+	matrix::Vector3f eso_asmcControl(const matrix:: Vector3f &att, const matrix:: Vector3f &att_sp, const matrix:: Vector3f &rate,
+			    hrt_abstime now, const float dt);
 	/**
 	 * @brief Get the States object
 	 *
@@ -170,6 +183,9 @@ private:
 	float _t{0};
 	float _count{0};
 
+	//adrc模块
+	ADRC _adrc;
+
 	//asmc控制信息
 	asmc_control_s _asmccontrol;
 
@@ -183,7 +199,7 @@ private:
 	const float _d = 0.66;	//电机离质心的距离
 
 	//sat函数阈值
-	float _saturation{0.3f};	//0.3f
+	float _saturation{0.2f};	//0.3f
 
 	//控制量derr前系数c
 	float _derrc{1.0f};
@@ -211,4 +227,7 @@ private:
 	matrix::Vector3f _asmc_ueq{};
 	matrix::Vector3f _asmc_k{};
 	matrix::Vector3f _asmc_r{};
+
+	// eso观测扰动
+	float _eso{0.0f};
 };

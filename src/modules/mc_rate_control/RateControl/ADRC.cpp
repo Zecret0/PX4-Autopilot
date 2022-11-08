@@ -50,19 +50,46 @@ void ADRC::setParam(const float b01, const float b02, const float b03)
 
 float ADRC::fal(const float e, const float alpha, const float delta)
 {
-	float s = (sign(e + delta) - sign(e - delta));
-	float y = e/(delta^(1 - alpha)) * s + abs(e)^alpha*sign(e)*(1 - s);
+	float s = (sign(e + delta) - sign(e - delta)) / 2;
+	// float y = e/(delta^(1 - alpha)) * s + abs(e)^alpha*sign(e)*(1 - s);
+	float y = e/(powf(delta, 1 - alpha)) * s + (powf(abs(e), alpha))*sign(e)*(1 - s);
 
 	return y;
 }
 
-float ADRC::ESO(const float b0u, const float y, const float dt)
+float ADRC::ESO(const float b0u, const float y, hrt_abstime now,  const float dt)
 {
 	float e = _eso_z1 - y;
-	float fe = fal(e, 0.5,  0.1);
-	float fe1 = fal(e, 0.25, 0.1);
+	float fe = fal(e, 0.5,  0.004);
+	float fe1 = fal(e, 0.25, 0.004);
 
+	// _eso_z1 += (_eso_z2 - _b01*e)*0.1f;
+	// _eso_z2 += (b0u - fe*_b02 + _eso_z3)*0.1f;
+	// _eso_z3 += (fe1 * _b03)*0.1f;
 	_eso_z1 += (_eso_z2 - _b01*e)*dt;
 	_eso_z2 += (b0u - fe*_b02 + _eso_z3)*dt;
-	_eso_z3 += (fe1 * _b03)*dt;
+	_eso_z3 += (fe1 * _b03)*dt ;
+
+	//记录日志并发布
+	_adrcmsg.timestamp = now;
+	_adrcmsg.dt = dt;
+
+	_adrcmsg.b01 = _b01;
+	_adrcmsg.b02 = _b02;
+	_adrcmsg.b03 = _b03;
+
+	_adrcmsg.b0u = b0u;
+	_adrcmsg.y = y;
+
+	_adrcmsg.e = e;
+	_adrcmsg.fe = fe;
+	_adrcmsg.fe1 = fe1;
+
+	_adrcmsg.eso_z1 = _eso_z1;
+	_adrcmsg.eso_z2 = _eso_z2;
+	_adrcmsg.eso_z3 = _eso_z3;
+
+	_adrc_pub.publish(_adrcmsg);
+
+	return _eso_z3;
 }

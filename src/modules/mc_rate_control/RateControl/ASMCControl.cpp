@@ -415,3 +415,123 @@ Vector3f ASMCControl::asmcControl1(const Vector3f &att, const Vector3f &att_sp, 
 	return torque;
 
 }
+
+//ASMC_ESO控制器
+Vector3f ASMCControl::eso_asmcControl(const Vector3f &att, const Vector3f &att_sp, const Vector3f &rate,
+			    hrt_abstime now, const float dt)
+{
+	_asmccontrol.timestamp = now;
+
+	_vehicle_local_pos_sub.update(&_local_pos);
+
+	Vector3f rate_sp(0.5f*(att_sp - att));	// 0.15f
+
+
+	Vector3f temp_attsp = att_sp;
+	Vector3f temp_ratesp = rate_sp;		// Vector3f temp_ratesp(rate_sp);
+	_count += dt;
+
+	// 测试跟踪正弦
+	if (_local_pos.z < - 5.0f)
+	// if (_count > 20)
+	{
+		temp_attsp(0) = 0.2f*sinf(_t);
+		temp_ratesp(0) = 0.2f*cosf(_t);
+		// temp_attsp(2) = 0.5f*sinf(_t);
+		// temp_ratesp(2) = 0.5f*cosf(_t);
+
+		_t  += dt;
+	}
+
+	Vector3f x2c(temp_ratesp);	//虚拟控制量
+
+	Vector3f dx2c = (x2c - _x2c_)/dt;
+	_x2c_ = x2c;
+
+
+	//误差量计算
+	const Vector3f derr = rate - temp_ratesp;
+	const Vector3f sigma = _derrc*(att - temp_attsp) + derr;
+
+	// _asmc_rho = _asmc_r0 + _asmc_r;
+	_asmc_rho(0) = _asmc_r0(0) + _asmc_r(0);
+	_asmc_rho(1) = _asmc_r0(1) + _asmc_r(1);
+	_asmc_rho(2) = _asmc_r0(2) + _asmc_r(2);
+
+	Vector3f ut;
+	Vector3f delta;
+	for (int i = 0; i < 3; i++)	//有1/Vectro3f 的操作，不知道怎么处理，于是分开写
+	{
+		ut(i) = -(_asmc_k(i) + _asmc_n(i))*saturation(sigma(i), _saturation);
+		delta(i) = _asmc_k(i) - 1/_asmc_alpha(i)*abs(_asmc_ueq(i)) - _asmc_e(i);
+		_asmc_ueq(i) += 1/_asmc_tau(i)*(ut(i) - _asmc_ueq(i))*dt;
+		_asmc_k(i) += -_asmc_r0(i)*sign(delta(i))*dt;
+
+		if (abs(delta(i)) > _asmc_d0(i))
+		{
+			_asmc_r(i) += _asmc_gamma(i)*abs(delta(i)) * dt;	//测试r的数据
+		} else{
+			_asmc_r(i) += 0;
+		}
+
+	}
+
+	// _asmc_k += -_asmc_rho.emult((float)sign(delta));
+	_asmc_rho(0) = _asmc_r0(0) + _asmc_r(0);
+	_asmc_rho(1) = _asmc_r0(1) + _asmc_r(1);
+	_asmc_rho(2) = _asmc_r0(2) + _asmc_r(2);
+
+	//计算输出控制量
+	Vector3f torque;
+	//做一个限幅
+	_asmc_k(0) = math::constrain(_asmc_k(0), -1.f, 2.f);
+	_asmc_k(1) = math::constrain(_asmc_k(0), -1.f, 2.f);
+	_asmc_k(2) = math::constrain(_asmc_k(0), -1.f, 2.f);
+
+	//调用eso
+	_eso = _adrc.ESO(_asmccontrol.u[0], att(0), now, dt);
+
+	//控制输出
+	torque(0) = -(_asmc_k(0) + _asmc_n(0))*saturation(sigma(0),  _saturation) - rate(1)*rate(2)*(_iyy - _izz)/_ixx - _derrc*derr(0) + dx2c(0) - _eso;
+	torque(1) = -(_asmc_k(1) + _asmc_n(1))*saturation(sigma(1), _saturation) - rate(0)*rate(2)*(_izz - _ixx)/_iyy - _derrc*derr(1) + dx2c(1);
+	torque(2) = -(_asmc_k(2) + _asmc_n(2))*saturation(sigma(2), _saturation) - rate(0)*rate(1)*(_ixx - _iyy)/_izz - _derrc*derr(2) + dx2c(2);
+
+	//for log
+	for (int i = 0; i < 3; i++)
+	{
+		_asmccontrol.att[i] = att(i);
+		_asmccontrol.att_sp[i] = temp_attsp(i);
+		_asmccontrol.rate[i] = rate(i);
+		_asmccontrol.rate_sp[i] = temp_ratesp(i);
+
+		_asmccontrol.ueq[i] = _asmc_ueq(i);
+		_asmccontrol.k[i] = _asmc_k(i);
+		_asmccontrol.r[i] = _asmc_r(i);
+
+		_asmccontrol.rho[i] = _asmc_rho(i);
+
+		_asmccontrol.sigma[i] = sigma(i);
+		_asmccontrol.derr[i] = _derrc*derr(i);
+		_asmccontrol.ut[i] = ut(i);
+		_asmccontrol.delta[i] = delta(i);
+
+		_asmccontrol.dx2c[i] = dx2c(i);
+
+		_asmccontrol.torque[i] = torque(i);
+	}
+
+	//限幅
+	torque(0) = torque(0)/_scale;	//人为限幅	PX4的输出限制在0-1，因此需要对控制器得到的输出量做放缩
+	torque(0) = math::constrain(torque(0), -1.0f, 1.0f);
+	torque(1) = math::constrain(torque(1), -1.0f, 1.0f);
+	torque(2) = math::constrain(torque(2), -1.0f, 1.0f);
+
+	_asmccontrol.u[0] = torque(0);
+	_asmccontrol.u[1] = torque(2);
+	_asmccontrol.u[2] = torque(2);
+
+
+	// _asmc_control_pub.publish(_asmccontrol);
+	return torque;
+
+}

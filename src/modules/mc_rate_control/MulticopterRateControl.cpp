@@ -276,7 +276,8 @@ MulticopterRateControl::Run()
 			// const Vector3f att_control = _asmc_control.asmcControl(attitude, attitude_sp, rates, _rates_sp, now, dt);
 			//ASMC控制器
 			// const Vector3f att_control = _asmc_control.asmcControl(_attitude, _attitude_sp, rates, _rates_sp, now, dt);
-			const Vector3f att_control = _asmc_control.asmcControl1(_attitude, _attitude_sp, rates, now, dt);	//优化版
+			// const Vector3f att_control = _asmc_control.asmcControl1(_attitude, _attitude_sp, rates, now, dt);	//优化版
+			const Vector3f att_control = _asmc_control.eso_asmcControl(_attitude, _attitude_sp, rates, now, dt);	//带扰动观测器版
 
 			//for log
 			// asmc_control_s asmccontrol{};

@@ -32,9 +32,9 @@
  ****************************************************************************/
 
 /**
- * @file ASMCControl.hpp
+ * @file ADRC.hpp
  *
- * Adaptive Sliding Mode Controller
+ * ADRC
  */
 
 #pragma once
@@ -46,7 +46,7 @@
 #include <matrix/matrix/math.hpp>
 #include <uORB/Subscription.hpp>
 
-
+#include <uORB/topics/adrc.h>
 
 class ADRC
 {
@@ -62,6 +62,18 @@ public:
 	 */
 	void setParam(const float b01, const float b02, const float b03);
 
+
+	/**
+	 * @brief 扩张状态观测器
+	 *
+	 * @param b0u
+	 * @param y
+	 * @param now
+	 * @param dt
+	 */
+	float ESO(const float b0u, const float y,hrt_abstime now,  const float dt);
+private:
+
 	/**
 	 * @brief fal函数
 	 *
@@ -69,23 +81,23 @@ public:
 	 * @return float
 	 */
 	float fal(const float e, const float alpha, const float delta);
-private:
-
 
 
 	//Subscription
 
 	// Publish
+	uORB::Publication<adrc_s>	_adrc_pub{ORB_ID(adrc)};
 
 	//ESO状态量
-	float _eso_z1{0.f};
-	float _eso_z2{0.f};
-	float _eso_z3{0.f};
+	float _eso_z1{0.0f};
+	float _eso_z2{0.0f};
+	float _eso_z3{0.0f};
 
 	//adrc参数
-	float _b01;
-	float _b02;
-	float _b03;
+	float _b01{100.f};
+	float _b02{800.f};
+	float _b03{-1000.f};
 
+	adrc_s _adrcmsg;
 
 };

@@ -34,6 +34,8 @@
 px4_add_library(RateControl
 	RateControl.cpp
 	RateControl.hpp
+	ADRC.cpp
+	ADRC.hpp
 	ASMCControl.cpp
 	ASMCControl.hpp
 )
